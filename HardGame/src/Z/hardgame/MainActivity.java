@@ -1,68 +1,70 @@
-package Z.hardgame;
+package z.HardGame;
 
 import org.jbox2d.common.Vec2;
-import org.jbox2d.dynamics.World;
-import org.json.JSONException;
 
-import ygame.extension.domain.tilemap.YTileMapDomain;
-import ygame.extension.with_third_party.YTiledJson_Box2dParser;
+import ygame.extension.domain.tilemap.YATileMapDomain;
+import ygame.extension.domain.tilemap.YDestructibleTerrain;
 import ygame.extension.with_third_party.YWorld;
+import ygame.framebuffer.YFBOScene;
 import ygame.framework.core.YABaseDomain;
+import ygame.framework.core.YRequest;
 import ygame.framework.core.YScene;
 import ygame.framework.core.YView;
-import ygame.utils.YTextFileUtils;
+import z.HardGame.domains.TestBall;
 import android.app.Activity;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 
 public class MainActivity extends Activity {
 
-	private YWorld world = new YWorld(new Vec2(0, -100));
+	private YView view;
+	private YWorld world;
+	public int i =0;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		YView view = (YView) findViewById(R.id.YView);
+		view = (YView) findViewById(R.id.YView);
+		world = new YWorld(new Vec2(0, -10f));
 		YScene scene = view.SYSTEM.getCurrentScene();
-		scene.addDomains(mapdomain());
+		scene.addClockerPlugin(world);
+		scene.addDomains(YATileMapDomain.createDestructibleTerrain("test", "testmap_1.json", this, world));
+		findViewById(R.id.testBtn).setOnClickListener(new testBtnLsn());
+		findViewById(R.id.ballBtn).setOnClickListener(new ballBtnLsn(this, scene));
 	}
 
-	private YABaseDomain mapdomain() {
-		YTiledJson_Box2dParser parser;
-		YTileMapDomain mapDomain = null;
-		try {
-			parser = new YTiledJson_Box2dParser(world,
-					YTextFileUtils.getStringFromAssets("testmap_1.json",
-							getResources()), 1.5f);
-			mapDomain = new YTileMapDomain("map", getResources(),
-					R.drawable.mapindex_1, parser,1,1);
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	private class testBtnLsn implements OnClickListener{
+
+		@Override
+		public void onClick(View arg0) {
+			// TODO Auto-generated method stub
+			YDestructibleTerrain map = (YDestructibleTerrain) view.SYSTEM.queryDomainByKey("test");
+			map.destroy(-2+i/10f, 3, 1);
+			i++;
 		}
 		
-		return mapDomain;
 	}
+	
+	private class ballBtnLsn implements OnClickListener{
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
-	}
+		private MainActivity activity;
+		private YScene scene;
 
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
-		if (id == R.id.action_settings) {
-			return true;
+		public ballBtnLsn(MainActivity mainActivity, YScene scene) {
+			// TODO Auto-generated constructor stub
+			this.activity = mainActivity;
+			this.scene = scene;
 		}
-		return super.onOptionsItemSelected(item);
+
+		@Override
+		public void onClick(View arg0) {
+			// TODO Auto-generated method stub
+			TestBall testBall = new TestBall("ball_"+i, activity, (float)(-2+i/10f), 4, world);
+			scene.addDomains(testBall);
+			i++;
+		}
+		
 	}
 }
