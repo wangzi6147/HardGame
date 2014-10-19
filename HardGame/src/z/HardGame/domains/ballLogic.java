@@ -1,7 +1,6 @@
 package z.HardGame.domains;
 
 import org.jbox2d.collision.shapes.CircleShape;
-import org.jbox2d.common.MathUtils;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.BodyDef;
@@ -9,7 +8,6 @@ import org.jbox2d.dynamics.BodyType;
 import org.jbox2d.dynamics.FixtureDef;
 import org.jbox2d.dynamics.World;
 
-import ygame.domain.YABaseShaderProgram.YABaseParametersAdapter;
 import ygame.domain.YADomainLogic;
 import ygame.domain.YDomain;
 import ygame.extension.primitives.YSquare;
@@ -31,6 +29,7 @@ public class ballLogic extends YADomainLogic {
 	private Body ballBody;
 	private YMover mover = new YMover();
 	private YSquare skeleton;
+	private boolean ifDestroy;
 
 	public ballLogic(float ballX, float ballY, World world) {
 		// TODO Auto-generated constructor stub
@@ -38,8 +37,9 @@ public class ballLogic extends YADomainLogic {
 		this.ballY = ballY;
 		this.world = world;
 		skeleton = new YSquare(0.5f, true, true);
+		ifDestroy = false;
 	}
-
+	
 	@Override
 	protected void onAttach(YSystem system, YBaseDomain domainContext) {
 		// TODO Auto-generated method stub
@@ -58,8 +58,18 @@ public class ballLogic extends YADomainLogic {
 		ballBody = world.createBody(ballDef);
 		ballBody.createFixture(def);
 		ballBody.setUserData("ball");
+		ballBody.setDomain(domainContext);
 	}
 
+	@Override
+	protected void onPreframe(YBaseDomain domainContext) {
+		// TODO Auto-generated method stub
+		super.onPreframe(domainContext);
+		if(ifDestroy){
+			world.destroyBody(ballBody);
+		}
+	}
+	
 	@Override
 	protected void onCycle(double dbElapseTime_s, YDomain domainContext,
 			YWriteBundle bundle, YSystem system, YScene sceneCurrent,
@@ -78,6 +88,11 @@ public class ballLogic extends YADomainLogic {
 			YScene sceneCurrent, YBaseDomain domainContext) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	public void destroyBody() {
+		ifDestroy = true;
+		ballBody.setUserData("ball_toDestroy");
 	}
 
 }

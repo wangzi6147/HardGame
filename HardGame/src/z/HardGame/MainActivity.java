@@ -1,16 +1,19 @@
 package z.HardGame;
 
 import org.jbox2d.common.Vec2;
+import org.jbox2d.dynamics.Body;
 
-import ygame.extension.domain.tilemap.YATileMapDomain;
-import ygame.extension.domain.tilemap.YDestructibleTerrain;
+import ygame.extension.tiled.YDestructibleTerrainParsePlugin;
+import ygame.extension.tiled.YStaticImageLayerParsePlugin;
+import ygame.extension.tiled.YStaticPolyLineTerrainParsePlugin;
+import ygame.extension.tiled.YTiledParser;
+import ygame.extension.tiled.domain.YDestructibleTerrainDomain;
 import ygame.extension.with_third_party.YWorld;
-import ygame.framebuffer.YFBOScene;
 import ygame.framework.core.YABaseDomain;
-import ygame.framework.core.YRequest;
 import ygame.framework.core.YScene;
 import ygame.framework.core.YView;
 import z.HardGame.domains.TestBall;
+import z.HardGame.domains.ballLogic;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
@@ -20,7 +23,8 @@ public class MainActivity extends Activity {
 
 	private YView view;
 	private YWorld world;
-	public int i =0;
+	public int i = 0;
+	private YScene scene;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -28,26 +32,43 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 		view = (YView) findViewById(R.id.YView);
 		world = new YWorld(new Vec2(0, -10f));
-		YScene scene = view.SYSTEM.getCurrentScene();
+		scene = view.SYSTEM.getCurrentScene();
 		scene.addClockerPlugin(world);
-		scene.addDomains(YATileMapDomain.createDestructibleTerrain("test", "testmap_1.json", this, world));
+		// scene.addDomains(YATileMapDomain.createDestructibleTerrain("test",
+		// "testmap_2.json", this, world));
+		new YTiledParser(scene, "testmap_2.json", this)
+				.append(new YStaticImageLayerParsePlugin("static", "bkg"))
+				.append(new YStaticPolyLineTerrainParsePlugin(world, "lines"))
+				.append(new YDestructibleTerrainParsePlugin("testmap",
+						"layer_1", "objLayer", world)).parse();
 		findViewById(R.id.testBtn).setOnClickListener(new testBtnLsn());
-		findViewById(R.id.ballBtn).setOnClickListener(new ballBtnLsn(this, scene));
+		findViewById(R.id.ballBtn).setOnClickListener(
+				new ballBtnLsn(this, scene));
 	}
 
-	private class testBtnLsn implements OnClickListener{
+	private class testBtnLsn implements OnClickListener {
 
 		@Override
 		public void onClick(View arg0) {
 			// TODO Auto-generated method stub
-			YDestructibleTerrain map = (YDestructibleTerrain) view.SYSTEM.queryDomainByKey("test");
-			map.destroy(-2+i/10f, 3, 1);
-			i++;
+			YDestructibleTerrainDomain map_0 = (YDestructibleTerrainDomain) view.SYSTEM
+					.queryDomainByKey("testmap_0");
+			YDestructibleTerrainDomain map_1 = (YDestructibleTerrainDomain) view.SYSTEM
+					.queryDomainByKey("testmap_1");
+			Body body = findBody("ball");
+			if (body != null) {
+				String key = body.getDomain().KEY;
+				map_0.destroyCircle(body.getPosition().x, body.getPosition().y, 1);
+				map_1.destroyCircle(body.getPosition().x, body.getPosition().y, 1);
+				TestBall domain = (TestBall) body.getDomain();
+				domain.destroyBody();
+				scene.removeDomains(key);
+			}
 		}
-		
+
 	}
-	
-	private class ballBtnLsn implements OnClickListener{
+
+	private class ballBtnLsn implements OnClickListener {
 
 		private MainActivity activity;
 		private YScene scene;
@@ -61,10 +82,26 @@ public class MainActivity extends Activity {
 		@Override
 		public void onClick(View arg0) {
 			// TODO Auto-generated method stub
-			TestBall testBall = new TestBall("ball_"+i, activity, (float)(-2+i/10f), 4, world);
+			ballLogic ballLogic = new ballLogic((float) (-3 + i / 10f), 7, world);
+			TestBall testBall = new TestBall("ball_" + i, activity,
+					ballLogic);
 			scene.addDomains(testBall);
 			i++;
 		}
-		
+
+	}
+
+	private Body findBody(String string) {
+		// TODO Auto-generated method stub
+		Body body = world.getBodyList();
+		while (body != null) {
+			if (body.getUserData() != null) {
+				if (body.getUserData().equals(string)) {
+					return body;
+				}
+			}
+			body = body.getNext();
+		}
+		return body;
 	}
 }
