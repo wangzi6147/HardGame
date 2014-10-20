@@ -30,14 +30,16 @@ public class ballLogic extends YADomainLogic {
 	private YMover mover = new YMover();
 	private YSquare skeleton;
 	private boolean ifDestroy;
+	private YScene scene;
 
-	public ballLogic(float ballX, float ballY, World world) {
+	public ballLogic(float ballX, float ballY, World world, YScene scene) {
 		// TODO Auto-generated constructor stub
 		this.ballX = ballX;
 		this.ballY = ballY;
 		this.world = world;
 		skeleton = new YSquare(0.5f, true, true);
 		ifDestroy = false;
+		this.scene = scene;
 	}
 	
 	@Override
@@ -67,8 +69,12 @@ public class ballLogic extends YADomainLogic {
 		super.onPreframe(domainContext);
 		if(ifDestroy){
 			world.destroyBody(ballBody);
+			ifDestroy = false;
+			scene.removeDomains(domainContext.KEY);
 		}
 	}
+	
+	
 	
 	@Override
 	protected void onCycle(double dbElapseTime_s, YDomain domainContext,
@@ -93,6 +99,7 @@ public class ballLogic extends YADomainLogic {
 	public void destroyBody() {
 		ifDestroy = true;
 		ballBody.setUserData("ball_toDestroy");
+		
 	}
 
 }

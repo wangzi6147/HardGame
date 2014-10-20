@@ -55,14 +55,15 @@ public class MainActivity extends Activity {
 					.queryDomainByKey("testmap_0");
 			YDestructibleTerrainDomain map_1 = (YDestructibleTerrainDomain) view.SYSTEM
 					.queryDomainByKey("testmap_1");
+//			map_0.destroyCircle((float) (-3 + i / 10f), 3, 1);
+//			map_1.destroyCircle((float) (-3 + i / 10f), 3, 1);
+//			i++;
 			Body body = findBody("ball");
 			if (body != null) {
-				String key = body.getDomain().KEY;
 				map_0.destroyCircle(body.getPosition().x, body.getPosition().y, 1);
 				map_1.destroyCircle(body.getPosition().x, body.getPosition().y, 1);
 				TestBall domain = (TestBall) body.getDomain();
 				domain.destroyBody();
-				scene.removeDomains(key);
 			}
 		}
 
@@ -82,7 +83,7 @@ public class MainActivity extends Activity {
 		@Override
 		public void onClick(View arg0) {
 			// TODO Auto-generated method stub
-			ballLogic ballLogic = new ballLogic((float) (-3 + i / 10f), 7, world);
+			ballLogic ballLogic = new ballLogic((float) (-3 + i / 10f), 7, world, scene);
 			TestBall testBall = new TestBall("ball_" + i, activity,
 					ballLogic);
 			scene.addDomains(testBall);
